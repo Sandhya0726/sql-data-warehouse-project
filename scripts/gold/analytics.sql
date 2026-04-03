@@ -208,20 +208,21 @@ select order_number,DATEDIFF(DAY,order_date,shipping_date) from gold.fact_sales;
 --Numbers of active customers from the cohort
 
 with cohort_months as (
-select customer_key, 
-dateadd(MONTH,datediff(MONTH,0,min(order_date)),0) as cohort_month
-from gold.fact_sales
-group by customer_key)
-
+	
+	select customer_key, 
+	datetrunc(month,min(order_date)) as cohort_month
+	from gold.fact_sales
+	group by customer_key
+)
 select a.cohort_month, 
-dateadd(month,datediff(month,0,b.order_date),0) as monthly_orders,
+datetrunc(month,b.order_date) as monthly_order, 
 DATEDIFF(MONTH, a.cohort_month, b.order_date) as cohort_index,
 count(distinct b.customer_key) as no_of_active_customer  from cohort_months a join gold.fact_sales  b
 on a.customer_key=b.customer_key 
 where cohort_month is not null
 group by 
 a.cohort_month,
-dateadd(month,datediff(month,0,b.order_date),0),
+datetrunc(month,b.order_date),
 DATEDIFF(MONTH, a.cohort_month, b.order_date)
-order by a.cohort_month, cohort_index
+order by a.cohort_month, cohort_index;
 
